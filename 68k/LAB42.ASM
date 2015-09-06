@@ -1,0 +1,48 @@
+		ORG 		$900				;start program at address #0900
+PIT	EQU 		$FE8000			;initial the starting address of PIT
+		LEA 		PIT,A0			;load PIT address to A0
+		MOVE.B 	#$00,1(A0)		;set PIT mode0       
+		MOVE.B 	#$FF,5(A0)		;set port A to all outputs
+		MOVE.B 	#$00,7(A0)		;set port B to all inputs
+		CLR.L	D0
+		CLR.L	D1
+		CLR.L	D2
+		CLR.L	D3
+		CLR.L	D4
+		CLR.L	D5
+		CLR.L	D6
+
+LOOP	MOVE.B 	19(A0),D1 		;read switches for port B
+	;NOT.B	D1	;INVERT IT SO IT WORKS LIKE WE WANT.	
+
+TESTB7	BTST	#7,D1	;TESTING WHAT'S GOING ON IN B7
+	MOVE.W	SR,D5
+	CLR.L	D4
+	MOVE.B	D5,D4	;MOVING THE ORIGINAL VALUE OF OUR LOWER BYTE OF SR TO D4
+	ANDI.B	#4,D4	; THIS AND OPERATION IS TO CHECK IF Z IS ON.
+	CMPI.B	#4,D4
+	BEQ	READ
+ROTATE	ROR.B	#1,D1
+
+	MOVE.B 	D1,17(A0) 		;and light LEDs on port A
+	BRA	ROTATE
+	;BRA 		LOOP				;loop 
+
+READ	;ONLY READING B0-B3
+	MOVE.B	D1,D6
+	ROR.B	#4,D6	;ROTATING TO PUT THE BITS IN THE FRONT
+	LSR.B	#4,D6	;MAKING THE SHIFT TO THE RIGHT TO HAVE ONLY THE FOUR BITS
+	MOVE.B	D6,D1
+	MOVE.B	D1,17(A0)
+	BRA	LOOP
+	
+	
+
+STOP	MOVE.B 	#228,D7
+		TRAP 		#14
+		END
+
+
+
+
+
